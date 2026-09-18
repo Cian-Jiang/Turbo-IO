@@ -35,7 +35,7 @@
 
 ## 3. 编译与本地合并
 
-依赖：JDK 17、Node.js 20+、Android SDK platform 36 / build-tools 36.0.0、apktool 2.12.1、`zip` / `unzip`。本地构建使用命令行，不需要 Gradle；构建工具由使用者安装，仓库不附带二进制。当前合并验证环境是 macOS。
+依赖：JDK 17、Node.js 20+、Python 3（仅标准库）、Android SDK platform 36 / build-tools 36.0.0、apktool 2.12.1、`unzip`。本地构建使用命令行，不需要 Gradle；构建工具由使用者安装，仓库不附带二进制。当前合并验证环境是 macOS。
 
 在仓库根目录执行（SDK 目录换成自己的）：
 
@@ -45,10 +45,13 @@ export ANDROID_SDK_ROOT="/path/to/Android/sdk"
 sdkmanager "platforms;android-36" "build-tools;36.0.0"
 
 bash android-addon/build.sh
+python3 -B android-addon/tests/assemble-apk-test.py
 node android-addon/package.mjs /path/to/RayNeo_AI_1.0.4.apk
 ```
 
-第一步运行73项检查，生成原创 `android-addon/build/dex/classes.dex`。第二步校验输入包、保留原回调方法并增加桥接，输出 `android-addon/build/TurboIO-RayNeo-1.0.4-unsigned.apk`。只编译原创 DEX 不需要官方 APK。
+构建脚本运行73项检查，生成原创 `android-addon/build/dex/classes.dex`。合并脚本校验输入包、保留原回调方法并增加桥接，输出 `android-addon/build/TurboIO-RayNeo-1.0.4-unsigned.apk`。只编译原创 DEX 不需要官方 APK。
+
+合并时仅替换宿主 `classes2.dex` 并加入扩展 DEX，其余内容直接从原 APK 复制。不要从解包目录重建资源：macOS 常见的不区分大小写文件系统会混淆 `res/Uk.xml` 与 `res/uK.xml`，破坏通知图标并导致连接时闪退。Python 检查覆盖这一情况，不需要官方 APK。
 
 ### 自己签名（非 Root 设备已验证可用）
 

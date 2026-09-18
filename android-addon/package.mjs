@@ -72,12 +72,9 @@ eventText+='\n'+eventHeader+`\n    .locals 1
 .end method\n`;
 fs.writeFileSync(eventFile,eventText);
 const output=path.join(root,'build/TurboIO-RayNeo-1.0.4-unsigned.apk');
-execFileSync('apktool',['b',host,'-o',output],{stdio:'inherit'});
-const entries=execFileSync('unzip',['-Z1',output],{encoding:'utf8'}).trim().split('\n');
-if(entries.includes('classes4.dex')) throw new Error('Unexpected classes4.dex collision');
-const staged=path.join(root,'build/classes4.dex');
-fs.copyFileSync(dex,staged);
-execFileSync('zip',['-q','-j',output,staged]);
+const rebuilt=path.join(root,'build/host-rebuilt.apk');
+execFileSync('apktool',['b',host,'-o',rebuilt],{stdio:'inherit'});
+execFileSync('python3',[path.join(root,'assemble-apk.py'),source,rebuilt,dex,output],{stdio:'inherit'});
 const report={sourceSha256:sha,sourceVersion:'1.0.4 (195)',originalSignaturePreserved:false,
   changes:['ASR observer','NLP/complete guards','onPostResume native entry','business19 display events','classes4.dex addon'],
   credentialsBundled:false,outputSha256:crypto.createHash('sha256').update(fs.readFileSync(output)).digest('hex'),
